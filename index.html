@@ -19,7 +19,13 @@
   document.open();document.write(code);document.close();
 }catch(e){}})();
 </script>
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Loan Data">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#1f3d2b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -482,6 +488,8 @@
   tr.reclass-row td:nth-child(2)::before{content:'\21b3 ';color:var(--brass);}
 
   .hidden{display:none !important;}
+  #tabManual,#tabTally{display:none !important;}
+  .cx{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0 16px}.cx td,.cx th{border:1px solid rgba(128,128,128,.45);padding:5px 7px;text-align:right}.cx td:first-child,.cx th:first-child{text-align:left;font-weight:600}.cx th{background:rgba(31,61,43,.9);color:#fff}.cx input{width:84px;text-align:right;padding:3px 4px;font:inherit;border:1px solid rgba(128,128,128,.5);border-radius:5px;background:rgba(255,235,150,.35);color:inherit}.cx input.w{width:100%;text-align:left}.cx .out{font-weight:700}.cx .tot td{font-weight:700;background:rgba(169,128,63,.18)}.cbar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:6px 0}.cbar input{width:90px;padding:3px 4px;font:inherit;border:1px solid rgba(128,128,128,.5);border-radius:5px;background:rgba(255,235,150,.35);color:inherit}.cbar input.w{width:220px}
 
   .status-banner{
     display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -606,6 +614,9 @@
     <button class="tab-btn" id="tabTally"><span class="tab-icon">✓</span><span data-i18n="tabTally">Tally check</span></button>
     <button class="tab-btn" id="tabLoanChart"><span class="tab-icon">▦</span><span data-i18n="tabLoanChart">Loan chart</span></button>
     <button class="tab-btn" id="tabLPC"><span class="tab-icon">§</span><span data-i18n="tabLPC">LPC</span></button>
+    <button class="tab-btn" id="tabVeh"><span class="tab-icon">🚗</span><span>Vehicle loan calc</span></button>
+    <button class="tab-btn" id="tabAll"><span class="tab-icon">₹</span><span>All loan calc</span></button>
+    <button class="tab-btn" id="tabApr"><span class="tab-icon">◈</span><span>Appraiser certificate</span></button>
     <button class="tab-btn" id="tabCustomerSearch"><span class="tab-icon">🔍</span><span data-i18n="tabCustomerSearch">Customer search</span></button>
     <button class="tab-btn" id="tabPaidTracker"><span class="tab-icon">✔</span><span data-i18n="tabPaidTracker">Paid tracker</span></button>
     <button class="tab-btn" id="tabChangeLog"><span class="tab-icon">≡</span><span data-i18n="tabChangeLog">Data changes</span></button>
@@ -921,6 +932,10 @@
     </div>
   </div>
 
+  <div id="vehPanel" class="hidden"><div class="card manual-card"><h3 style="font-family:'Source Serif 4',serif;margin:0 0 4px;">Vehicle loan calculation</h3><p class="hint">Yellow boxes are editable (price, down %, share %, margin %). Everything else recalculates. Per Excel: Loan = A − Down; Margin = Loan × %; C = A + B; E = C − Down; EMI = E ÷ months.</p><div id="vehBody"></div><button class="btn ghost" data-print="vehBody" data-title="Vehicle loan calculation" type="button">Print / PDF</button></div></div>
+  <div id="allPanel" class="hidden"><div class="card manual-card"><h3 style="font-family:'Source Serif 4',serif;margin:0 0 4px;">Loan calculation sheet</h3><p class="hint">Edit the amount, SOC % , months and share %. Total = Loan + SOC; EMI = Total ÷ months.</p><div id="allBody"></div><button class="btn ghost" data-print="allBody" data-title="Loan calculation sheet" type="button">Print / PDF</button></div></div>
+  <div id="aprPanel" class="hidden"><div class="card manual-card"><h3 style="font-family:'Source Serif 4',serif;margin:0 0 4px;">Jewel appraiser certificate</h3><p class="hint">Enter the 24-carat board rate; 18/22/20-carat rates, market price and eligible loan calculate automatically.</p><div id="aprBody"></div><button class="btn ghost" data-print="aprBody" data-title="Jewel appraiser certificate" type="button">Print / PDF</button></div></div>
+
   <div id="results" class="hidden">
 
     <div class="card dashboard-card hidden" id="dashboardCard">
@@ -932,6 +947,19 @@
         <span class="dashboard-status" id="dashStatus"></span>
       </div>
       <div class="dashboard-stats" id="dashStats"></div>
+      <div id="dashManual" style="margin-top:12px;padding:10px 12px;border:1px dashed #a9803f;border-radius:8px;font-size:13px;">
+        <b>Manual entry (optional)</b> — type from the company app (Cash/Bank Receipt screen). Leave blank for AUTO from statement.
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;">
+          <label>Current balance Dr (₹) <input id="manBal" type="number" step="0.01" style="width:130px"></label>
+          <label>Profit outstanding (₹) <input id="manProv" type="number" step="0.01" style="width:130px"></label>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;align-items:center;">
+          <label>Notices sent (manual) <input id="manNotices" type="number" min="0" step="1" style="width:80px"></label>
+          <button type="button" id="btnNoticePlus" style="padding:6px 10px;cursor:pointer;">+1 notice sent today</button>
+        </div>
+        <div id="dashNoticeNote" style="margin-top:8px;font-weight:700;"></div>
+        <div id="dashManualNote" style="margin-top:8px;font-weight:600;"></div>
+      </div>
       <div class="dashboard-actions" id="dashActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;"></div>
     </div>
 
@@ -993,7 +1021,13 @@
       <button class="btn ghost" id="recalcBtn" style="margin-top:14px;">Recalculate</button>
     </div>
 
-    <div class="card manual-card" id="chargesCard" style="padding:18px 22px;">
+    <div class="card" id="minusCard" style="display:none;margin-bottom:16px;padding:16px;">
+  <h3 style="font-family:'Source Serif 4',serif;margin:0 0 6px;">Minus entries only — notices &amp; charges</h3>
+  <div class="hint" style="margin-bottom:8px;">−₹500 = 1 notice (auto). Minus amounts go on the principal side by default — change the dropdown or move the amount to Profit here. All transfers are listed in the table below.</div>
+  <table style="width:100%;font-size:13px;"><thead><tr><th align="left">Date</th><th align="left">Doc</th><th align="right">Amount</th><th align="left">Classify as</th><th align="left">Principal (₹)</th><th align="left">Profit (₹)</th></tr></thead><tbody id="minusBody"></tbody></table>
+  <div id="minusSummary" style="margin-top:8px;font-weight:700;"></div>
+</div>
+<div class="card manual-card" id="chargesCard" style="padding:18px 22px;">
       <h3 style="font-family:'Source Serif 4',serif;margin:0 0 4px;font-size:16px;">Transfers &amp; charges</h3>
       <p style="margin:0 0 14px;font-size:12.5px;color:var(--ink-soft);">These transfer entries are left out of the ledger by default. A transfer that actually reduced the loan balance is auto-tagged as an EMI (self-transfer); tag any others as a penalty, notice charge, cheque-bounce charge, or an additional disbursement — everything else stays ignored. Once tagged, adjust the principal/profit split if needed — it's added into the statement below with those figures.</p>
       <div style="overflow-x:auto;">
@@ -1068,9 +1102,9 @@
       <path d="M9.5 19c-2 0-3.5-1.55-3.5-3.5 0-1.75 1.3-3.2 3-3.46.5-2.1 2.38-3.54 4.6-3.54 2.34 0 4.3 1.63 4.75 3.86 1.85.2 3.15 1.63 3.15 3.34 0 1.86-1.55 3.3-3.5 3.3H9.5z" fill="#f6f2e7"/>
       <circle cx="21.5" cy="10" r="2.1" fill="#a9803f"/>
     </svg>
-    <span class="brand-word">Clouds Dev Solutions<small>Software &amp; automation studio</small></span>
+    <span class="brand-word">Clouds Dev Solutions<small>Software &amp; automation studio · <a href="mailto:cloudsdevsolutions@gmail.com">cloudsdevsolutions@gmail.com</a></small></span>
   </div>
-  © 2026 All rights reserved. Powered by Clouds Dev Solutions.
+  © 2026 All rights reserved. Powered by Clouds Dev Solutions · cloudsdevsolutions@gmail.com
 </footer>
 
 <script>
@@ -1082,6 +1116,51 @@ const statusText = document.getElementById('statusText');
 const results = document.getElementById('results');
 
 let lastParsed = null;
+function noticeStore(){ try{ return JSON.parse(localStorage.getItem('loanNotices')||'{}'); }catch(e){ return {}; } }
+function noticeSave(o){ try{ localStorage.setItem('loanNotices', JSON.stringify(o)); }catch(e){} }
+function noticeCountNow(){
+  const rec = noticeStore()[window._curAc||'unknown'];
+  return (rec && rec.count!=null) ? rec.count : (window._autoNoticeCount||0);
+}
+function renderNotices(){
+  const el = document.getElementById('dashNoticeNote'); if(!el) return;
+  const ac = window._curAc || 'unknown';
+  const rec = noticeStore()[ac] || {count:null, dates:[]};
+  const auto = window._autoNoticeCount || 0;
+  const manual = rec.count;
+  const n = manual!=null ? manual : auto;
+  const inp = document.getElementById('manNotices');
+  if(inp && document.activeElement!==inp) inp.value = manual!=null ? manual : '';
+  let t = 'Notices already issued: '+n+(manual!=null?' (MANUAL)':' (AUTO — counted from −₹500 entries in the statement)');
+  if(rec.dates && rec.dates.length) t += ' · last: '+rec.dates.slice(-3).join(', ');
+  if(n>3){ t += '  ⚠ MORE THAN 3 NOTICES — escalate this customer'; el.style.color='#a13d2b'; }
+  else el.style.color='inherit';
+  el.textContent = t;
+}
+document.addEventListener('input', e=>{
+  if(e.target.id!=='manNotices') return;
+  const st = noticeStore(), ac = window._curAc || 'unknown';
+  const v = parseInt(e.target.value,10);
+  st[ac] = st[ac] || {count:null, dates:[]};
+  st[ac].count = isNaN(v) ? null : v;
+  noticeSave(st); renderNotices();
+});
+document.addEventListener('click', e=>{
+  if(e.target.id!=='btnNoticePlus') return;
+  const st = noticeStore(), ac = window._curAc || 'unknown';
+  st[ac] = st[ac] || {count:null, dates:[]};
+  const base = st[ac].count!=null ? st[ac].count : (window._autoNoticeCount||0);
+  st[ac].count = base+1; st[ac].dates.push(new Date().toLocaleDateString('en-GB'));
+  noticeSave(st); renderNotices();
+});
+window._manualOutstanding = null;
+document.addEventListener('input', e=>{
+  if(e.target.id!=='manBal' && e.target.id!=='manProv') return;
+  const b = parseFloat(document.getElementById('manBal').value);
+  const p = parseFloat(document.getElementById('manProv').value)||0;
+  window._manualOutstanding = isNaN(b) ? null : b + p; window._manBal = isNaN(b)?null:b; window._manProv = p;
+  if(lastParsed) render(lastParsed, window._lastRenderMode||'upload');
+});
 let letterheadBuffer = null;
 let pageFitOverride = 'auto'; // 'auto' | 'one' | 'multi' — user can override the automatic page-fit choice
 
@@ -1197,6 +1276,17 @@ function renderBatchResults(){
     </tr>`;
   }).join('');
   card.classList.remove('hidden');
+  renderNotices();
+  const note = document.getElementById('dashManualNote');
+  if(note){
+    const c = window._statusCmp, a = accountStatus;
+    let t = '';
+    if(a && a.calc) t = (a.source==='manual'?'MANUAL: ':'AUTO: ')+'₹'+fmt(a.calc.out)+' ÷ EMI = '+a.calc.balEmi.toFixed(2)+' balance EMIs − '+a.calc.monthsLeft+' months left = '+a.pendingEmi+' pending.';
+    if(c && a && a.source==='manual' && c.auto.pendingEmi!==a.pendingEmi)
+      t += ' ⚠ MISMATCH: statement alone gives ₹'+fmt(c.autoOut)+' → '+c.auto.pendingEmi+' pending. Check which figure is right.';
+    note.textContent = t;
+    note.style.color = t.includes('MISMATCH') ? '#a13d2b' : 'inherit';
+  }
 }
 document.getElementById('batchResultsBody').addEventListener('click', (e)=>{
   const tr = e.target.closest('tr[data-batch-idx]');
@@ -1983,13 +2073,15 @@ const changeLogPanel = document.getElementById('changeLogPanel');
 const developerPanel = document.getElementById('developerPanel');
 const sourcePanel = document.getElementById('sourcePanel');
 const settingsPanel = document.getElementById('settingsPanel');
-const ALL_TABS = [tabUpload,tabManual,tabTally,tabLoanChart,tabLPC,tabCustomerSearch,tabPaidTracker,tabChangeLog,tabDeveloper,tabSettings,tabSource];
-const ALL_PANELS = [uploadPanel,manualPanel,tallyPanel,loanChartPanel,lpcPanel,customerSearchPanel,paidTrackerPanel,changeLogPanel,developerPanel,settingsPanel,sourcePanel];
+const tabVeh=document.getElementById('tabVeh'), tabAll=document.getElementById('tabAll'), tabApr=document.getElementById('tabApr');
+const vehPanel=document.getElementById('vehPanel'), allPanel=document.getElementById('allPanel'), aprPanel=document.getElementById('aprPanel');
+const ALL_TABS = [tabVeh,tabAll,tabApr,tabUpload,tabManual,tabTally,tabLoanChart,tabLPC,tabCustomerSearch,tabPaidTracker,tabChangeLog,tabDeveloper,tabSettings,tabSource];
+const ALL_PANELS = [vehPanel,allPanel,aprPanel,uploadPanel,manualPanel,tallyPanel,loanChartPanel,lpcPanel,customerSearchPanel,paidTrackerPanel,changeLogPanel,developerPanel,settingsPanel,sourcePanel];
 function showTab(active){
   ALL_TABS.forEach(b=>b.classList.remove('active'));
   ALL_PANELS.forEach(p=>p.classList.add('hidden'));
   active.tab.classList.add('active');
-  { const l=active.tab.querySelector('[data-i18n]'), t=document.getElementById('topTitle'); if(t&&l) t.textContent=l.textContent; }
+  { const l=active.tab.querySelector('[data-i18n]')||active.tab.querySelector('span:last-child'), t=document.getElementById('topTitle'); if(t&&l) t.textContent=l.textContent; }
   if(window.closeNav) closeNav();
   active.panel.classList.remove('hidden');
   try{ active.tab.parentElement.scrollTo({left:active.tab.offsetLeft-12,behavior:'smooth'}); }catch(e){}
@@ -1997,6 +2089,9 @@ function showTab(active){
   if(active.panel===paidTrackerPanel) renderPaidTracker();
   if(active.panel===lpcPanel) renderLpcTable();
 }
+tabVeh.addEventListener('click', ()=> showTab({tab:tabVeh, panel:vehPanel}));
+tabAll.addEventListener('click', ()=> showTab({tab:tabAll, panel:allPanel}));
+tabApr.addEventListener('click', ()=> showTab({tab:tabApr, panel:aprPanel}));
 tabUpload.addEventListener('click', ()=> showTab({tab:tabUpload, panel:uploadPanel}));
 tabManual.addEventListener('click', ()=> showTab({tab:tabManual, panel:manualPanel}));
 tabTally.addEventListener('click', ()=> showTab({tab:tabTally, panel:tallyPanel}));
@@ -2142,10 +2237,15 @@ function closeNav(){ document.body.classList.remove('nav-open'); }
     theme_color: '#1f3d2b',
     icons: [{ src: iconUri, sizes: '30x30', type: 'image/svg+xml', purpose: 'any' }]
   };
-  const manifestLink = document.getElementById('pwaManifest');
-  if('serviceWorker' in navigator && location.protocol.indexOf('http')===0){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
 
+  if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+    window.addEventListener('load', ()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+  }
   const installBtn = document.getElementById('installBtn');
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if(installBtn && isStandalone){ installBtn.textContent = 'Installed'; }
+  else if(installBtn && isIOS){ installBtn.textContent = 'On iPhone/iPad: tap Share → Add to Home Screen'; }
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
@@ -2564,7 +2664,7 @@ function parseStatement(lines, page1Items){
     disbursementProfit = Math.abs(disbRow.interest);
   } else {
     const firstTransfer = transactions.find(t=>t.type==='Transfer');
-    if(firstTransfer) disbursementProfit = Math.abs(firstTransfer.total || 0);
+    if(firstTransfer) disbursementProfit = Math.abs((firstTransfer.interest!=null ? firstTransfer.interest : firstTransfer.total) || 0);
   }
 
   return {meta, transactions, footerReceivable, footerOutstanding, footerTotal, transferCount, disbursementProfit};
@@ -2587,42 +2687,44 @@ function fmt(n){
 //   1–3 pending         → OD (overdue) customer
 //   4+ pending          → NPA customer
 //   outstanding ≤ 0     → Closed, regardless of the above
-function computeAccountStatus(meta, recTotal, outstandingPrincipal){
-  if(outstandingPrincipal!=null && outstandingPrincipal<=0.5){
-    return {tag:'closed', label:'Closed — paid in full', pendingEmi:0, dueInstalments:null};
-  }
+function computeAccountStatus(meta, recTotal, outstanding, forceAuto){
+  const man = (!forceAuto && window._manualOutstanding!=null) ? window._manualOutstanding : null;
+  const out = man!=null ? man : outstanding;
+  const source = man!=null ? 'manual' : 'auto';
+  if(out!=null && out<=0.5) return {tag:'closed', label:'Closed — paid in full', pendingEmi:0, dueInstalments:null, source};
   const instAmt = meta.instAmt ? parseFloat(String(meta.instAmt).replace(/,/g,'')) : null;
-  const loanDateStr = meta.loanDate;
-  if(!instAmt || !loanDateStr){
-    return {tag:'unknown', label:'Status unavailable — no loan date / instalment found', pendingEmi:null, dueInstalments:null};
-  }
-  const dm = loanDateStr.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-  if(!dm) return {tag:'unknown', label:'Status unavailable — could not read the loan date', pendingEmi:null, dueInstalments:null};
-  const start = new Date(parseInt(dm[3],10), parseInt(dm[2],10)-1, parseInt(dm[1],10));
+  const dm = (meta.loanDate||'').match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if(!instAmt || !dm || out==null) return {tag:'unknown', label:'Status unavailable — no loan date / instalment / outstanding found', pendingEmi:null, dueInstalments:null, source};
+  const start = new Date(+dm[3], +dm[2]-1, +dm[1]);
   const today = new Date();
   let due = (today.getFullYear()-start.getFullYear())*12 + (today.getMonth()-start.getMonth());
   if(today.getDate() < start.getDate()) due--;
   due = Math.max(0, due);
   const period = meta.period ? parseInt(meta.period,10) : null;
   if(period) due = Math.min(due, period);
-  const expectedByNow = due * instAmt;
-  const shortfall = expectedByNow - (recTotal||0);
-  const pendingEmi = shortfall > (instAmt*0.05) ? Math.round(shortfall/instAmt) : 0;
+  // Rule: balance EMIs = outstanding ÷ EMI; months left = period − instalments due;
+  // pending = balance EMIs − months left. 1–3 = OD, 4+ = NPA.
+  const balEmi = out/instAmt;
+  // months left counts the current month (e.g. Oct 2026 → May 2028 = 20), so this month's EMI isn't called pending yet
+  const monthsLeft = period ? (due<period ? period - due + 1 : 0) : 0;
+  const pendingEmi = period ? Math.max(0, Math.ceil(balEmi - monthsLeft - 0.05))
+                            : Math.max(0, Math.round((due*instAmt-(recTotal||0))/instAmt));
+  const calc = {balEmi, monthsLeft, out};
   let nextDueDate = null;
-  if(period==null || due < period){
-    const nd = new Date(start.getFullYear(), start.getMonth()+due+1, start.getDate());
-    nextDueDate = fmtDate(nd);
-  }
-  if(pendingEmi<=0) return {tag:'current', label:'Current — no pending EMI', pendingEmi:0, dueInstalments:due, nextDueDate};
-  if(pendingEmi<=3) return {tag:'od', label:'OD customer — '+pendingEmi+' pending EMI'+(pendingEmi>1?'s':''), pendingEmi, dueInstalments:due, nextDueDate};
-  return {tag:'npa', label:'NPA customer — '+pendingEmi+' pending EMIs', pendingEmi, dueInstalments:due, nextDueDate};
+  if(period==null || due < period) nextDueDate = fmtDate(new Date(start.getFullYear(), start.getMonth()+due+1, start.getDate()));
+  const base = {dueInstalments:due, nextDueDate, source, calc, pendingEmi};
+  if(pendingEmi<=0) return {...base, tag:'current', label:'Current — no pending EMI'};
+  if(pendingEmi<=3) return {...base, tag:'od', label:'OD customer — '+pendingEmi+' pending EMI'+(pendingEmi>1?'s':'')};
+  return {...base, tag:'npa', label:'NPA customer — '+pendingEmi+' pending EMIs'};
 }
 
 // A transfer that actually reduced the loan balance (has a real principal
 // component) is someone's EMI routed through a self-transfer rather than a
 // CashReceipt/BankReceipt row — auto-tag those as 'emi'. Anything else
 // (pure interest/charge lines) defaults to 'ignore' until manually tagged.
+function isMinusCharge(t){ return t.type==='Transfer' && t.total<0 && t.date!==window._loanDate; }
 function defaultTagFor(t){
+  if(isMinusCharge(t)) return Math.round(Math.abs(t.total))===500 ? 'notice' : 'penalty';
   return (t.principal && t.principal>0) ? 'emi' : 'ignore';
 }
 function tagLabel(tag){
@@ -2636,8 +2738,8 @@ function defaultValsFor(t, tag){
   if(tag==='emi'){
     return {principal: t.principal||0, profit: t.interest||0};
   }
-  // penalty / notice / cheque: whole amount treated as a profit-side charge by default
   const amt = Math.abs(t.total!=null ? t.total : (t.interest||0));
+  if(isMinusCharge(t)) return {principal: amt, profit: 0};
   return {principal:0, profit: amt};
 }
 // Walk the raw Transfer rows in document order, assigning each the same
@@ -2692,6 +2794,7 @@ function render(parsed, mode){
   mode = mode || 'upload';
   window._lastRenderMode = mode;
   const {meta, transactions, footerReceivable, footerOutstanding, footerTotal, disbursementProfit} = parsed;
+  window._loanDate = meta.loanDate;
 
   const ledgerTitle = document.querySelector('.ledger-head h2');
   if(ledgerTitle) ledgerTitle.textContent = mode==='manual'
@@ -2771,9 +2874,9 @@ function render(parsed, mode){
   // --- Transfers & Charges review list (manual tagging) ---
   const chargesCard = document.getElementById('chargesCard');
   if(mode==='manual' || transferRows.length===0){
-    chargesCard.classList.add('hidden');
+    chargesCard.classList.add('hidden'); {const m=document.getElementById('minusCard'); if(m) m.style.display='none';}
   } else {
-    chargesCard.classList.remove('hidden');
+    chargesCard.classList.remove('hidden'); {const m=document.getElementById('minusCard'); if(m) m.style.display='';}
     const chargesBody = document.getElementById('chargesBody');
     const entries = getTransferEntries(transactions);
     const opts = [['ignore','Ignore (routine)'],['emi','EMI (self-transfer)'],['additional','Additional disbursement'],['penalty','Penalty'],['notice','Notice charge'],['cheque','Cheque bounce charge']];
@@ -2789,14 +2892,24 @@ function render(parsed, mode){
         <td><input type="number" step="0.01" data-key="${key}" data-field="profit" class="charge-val" value="${vals.profit||0}" ${disabled} style="width:100px;"></td>
       </tr>`;
     }).join('');
-    chargesBody.querySelectorAll('.charge-select').forEach(sel=>{
+    const minusBody = document.getElementById('minusBody');
+    const mrows = entries.filter(({t})=>isMinusCharge(t));
+    if(minusBody){
+      const trs = Array.from(chargesBody.children).filter((tr,i)=>entries[i] && isMinusCharge(entries[i].t));
+      minusBody.innerHTML = trs.map(tr=>tr.outerHTML).join('') || '<tr><td colspan="6">No minus entries.</td></tr>';
+    }
+    const nN = mrows.filter(({key})=>(parsed.chargeTags[key])==='notice').length;
+    const oth = mrows.filter(({key})=>(parsed.chargeTags[key])!=='notice').reduce((a,{t})=>a+Math.abs(t.total),0);
+    const ms = document.getElementById('minusSummary');
+    if(ms) ms.textContent = nN+' notice(s) (₹500 each = ₹'+fmt(nN*500)+') · other minus charges ₹'+fmt(oth)+(nN>3?'  ⚠ MORE THAN 3 NOTICES':'');
+    document.querySelectorAll('#chargesBody .charge-select, #minusBody .charge-select').forEach(sel=>{
       sel.addEventListener('change', ()=>{
         parsed.chargeTags[sel.dataset.key] = sel.value;
         delete parsed.chargeVals[sel.dataset.key]; // recompute defaults for the newly chosen tag
         render(parsed, mode);
       });
     });
-    chargesBody.querySelectorAll('.charge-val').forEach(inp=>{
+    document.querySelectorAll('#chargesBody .charge-val, #minusBody .charge-val').forEach(inp=>{
       inp.addEventListener('change', ()=>{
         const key = inp.dataset.key, field = inp.dataset.field;
         if(!parsed.chargeVals[key]) parsed.chargeVals[key] = {principal:0, profit:0};
@@ -2854,7 +2967,16 @@ function render(parsed, mode){
   }
   const computedOutstandingPrincipal = computedBalance!==null ? computedBalance : (loanAmt!==null ? (loanAmt + additionalDisbursementTotal + chargesSum - recPrincipalWithSns) : lastBalance);
 
-  const accountStatus = mode==='manual' ? null : computeAccountStatus(meta, recTotalWithSns, computedOutstandingPrincipal);
+  window._curAc = meta.acNo || meta.memberNo || meta.borrower; window._autoNoticeCount = kept.filter(t=>t._reclass==='notice').length;
+  const fo = (mode!=='manual' && footerOutstanding && footerOutstanding.total!=null) ? footerOutstanding : null;
+  window._footer = fo;
+  const _tp = meta.profitAmountOverride!=null ? meta.profitAmountOverride : disbursementProfit;
+  const profOutAuto = _tp!=null ? Math.max(0, Math.round((_tp - recInterestWithSns)*100)/100) : null;
+  // total outstanding = principal outstanding (statement) + profit outstanding (total profit − profit recovered)
+  const autoOut = (fo && fo.principal!=null && profOutAuto!=null) ? fo.principal + profOutAuto : computedOutstandingPrincipal;
+  const effOutstanding = (window._manualOutstanding!=null) ? window._manualOutstanding : autoOut;
+  const accountStatus = mode==='manual' ? null : computeAccountStatus(meta, recTotalWithSns, autoOut);
+  window._statusCmp = mode==='manual' ? null : {auto: computeAccountStatus(meta, recTotalWithSns, autoOut, true), autoOut: autoOut};
   const statusBanner = document.getElementById('statusBanner');
   if(statusBanner){
     if(accountStatus){
@@ -2870,9 +2992,9 @@ function render(parsed, mode){
     }
   }
 
-  updateDashboard(meta, accountStatus, computedOutstandingPrincipal, recPrincipalWithSns, recInterestWithSns, disbursementProfit, loanAmt);
+  updateDashboard(meta, accountStatus, effOutstanding, recPrincipalWithSns, recInterestWithSns, disbursementProfit, loanAmt);
   if(mode!=='manual' && (meta.borrower || meta.acNo)){
-    updateWatchlist(meta, accountStatus, computedOutstandingPrincipal);
+    updateWatchlist(meta, accountStatus, effOutstanding);
   }
 
   const cards = [];
@@ -3023,7 +3145,7 @@ function updateDashboard(meta, accountStatus, outstandingBalance, principalRecov
   subEl.textContent = idBits.length ? idBits.join('  ·  ') : (meta.loanDate ? 'Loan date '+meta.loanDate : '');
 
   if(accountStatus){
-    statusEl.textContent = accountStatus.label;
+    statusEl.textContent = accountStatus.label + (accountStatus.source==='manual' ? ' · MANUAL ENTRY' : ' · AUTO (statement)');
     statusEl.style.background = (STATUS_COLORS[accountStatus.tag]||'#666') + '20';
     statusEl.style.color = STATUS_COLORS[accountStatus.tag] || 'var(--ink)';
     statusEl.style.display = '';
@@ -3033,18 +3155,27 @@ function updateDashboard(meta, accountStatus, outstandingBalance, principalRecov
 
   // Profit outstanding: prefer the statement's own whole-term figure when
   // it has one; otherwise fall back to whatever the person entered manually.
-  const totalProfit = disbursementProfit!=null ? disbursementProfit : (meta.profitAmountOverride!=null ? meta.profitAmountOverride : null);
-  const profitOutstanding = (totalProfit!=null && profitRecovered!=null) ? Math.max(0, Math.round((totalProfit - profitRecovered)*100)/100) : null;
+  const _inst = parseFloat(String(meta.instAmt||'').replace(/,/g,'')), _per = parseInt(meta.period,10), _loan = parseFloat(String(meta.loanAmt||'').replace(/,/g,''));
+  const ruleProfit = (_inst && _per && _loan) ? Math.round((_inst*_per-_loan)*100)/100 : null;
+  const totalProfit = meta.profitAmountOverride!=null ? meta.profitAmountOverride : (disbursementProfit!=null ? disbursementProfit : ruleProfit);
+  let profitOutstanding = (totalProfit!=null && profitRecovered!=null) ? Math.max(0, Math.round((totalProfit - profitRecovered)*100)/100) : null;
 
   const dashLabels = currentLang==='ta'
     ? ['நிலுவைத் தொகை','அசல் மீட்பு','லாபம் மீட்பு','நிலுவை லாபம்']
     : ['Outstanding balance','Principal recovered','Profit recovered','Profit outstanding'];
+  if(window._manualOutstanding!=null){ profitOutstanding = window._manProv||0; }
+  
+  const principalOut = window._manualOutstanding!=null ? window._manBal
+    : window._footer ? window._footer.principal
+    : ((outstandingBalance!=null && profitOutstanding!=null) ? Math.max(0, outstandingBalance - profitOutstanding) : null);
   const stats = [
     [dashLabels[0], outstandingBalance!=null ? '₹'+fmt(outstandingBalance) : '—'],
+    ['Principal outstanding', principalOut!=null ? '₹'+fmt(principalOut) : '—'],
     [dashLabels[1], principalRecovered!=null ? '₹'+fmt(principalRecovered) : '—'],
     [dashLabels[2], profitRecovered!=null ? '₹'+fmt(profitRecovered) : '—'],
     [dashLabels[3], profitOutstanding!=null ? '₹'+fmt(profitOutstanding) : '—'],
   ];
+  { const nn = noticeCountNow(); stats.push(['Notices already issued (−₹500 each)', nn + (nn>3 ? ' ⚠ MORE THAN 3' : '')]); }
   statsEl.innerHTML = stats.map(s=>`<div class="dstat"><label>${s[0]}</label><div class="val">${s[1]}</div></div>`).join('');
   card.classList.remove('hidden');
 
@@ -3719,5 +3850,78 @@ if(loanChartRows.length){
 }
 
 </script>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const f=n=>isFinite(n)?Math.round(n).toLocaleString('en-IN'):'—';
+const f2=n=>isFinite(n)?(Math.round(n*100)/100).toLocaleString('en-IN'):'—';
+const v=id=>parseFloat($(id).value)||0;
+const I=(id,val)=>`<input type="number" step="any" id="${id}" value="${val}">`;
+const O=id=>`<td class="out" id="${id}"></td>`;
+const set=(id,x,d)=>{$(id).textContent=d?f2(x):f(x);};
+// ---- Vehicle (Vehicle_loan_calculation_sheet) ----
+const VEH=[['b','OWN BOARD — BIKE · WHITE BOARD VEHICLE',115290,[11,17,24,30,36]],['c','COMMERCIAL · YELLOW BOARD VEHICLE',900000,[13,20,28.08,37.37,47.04]],['k','CAR · WHITE BOARD VEHICLE',111829,[11,17,22,29,36]]];
+let h='';
+VEH.forEach(([k,t,pr,m])=>{
+ h+=`<h4 style="margin:14px 0 4px">${t}</h4><div class="cbar"><span>Down payment %</span>${I(k+'dp',30)}<span>= <b id="${k}dpv"></b></span><span>Loan amount <b id="${k}ln"></b></span><span>Share %</span>${I(k+'sp',2.5)}<span>= <b id="${k}sh"></b></span></div>
+ <div style="overflow-x:auto"><table class="cx"><tr><th>Particulars</th>${[1,2,3,4,5].map(y=>`<th>${y} year${y>1?'s':''}</th>`).join('')}</tr>
+ <tr><td>Show room price (A)</td><td>${I(k+'A',pr)}</td>${[2,3,4,5].map(y=>O(k+'A'+y)).join('')}</tr>
+ <tr><td>Janseva margin %</td>${m.map((x,i)=>`<td>${I(k+'m'+(i+1),x)}</td>`).join('')}</tr>
+ <tr><td>Janseva Margin (B)</td>${[1,2,3,4,5].map(y=>O(k+'B'+y)).join('')}</tr>
+ <tr class="tot"><td>Janseva price (A+B) = C</td>${[1,2,3,4,5].map(y=>O(k+'C'+y)).join('')}</tr>
+ <tr><td>Down payment (D)</td>${[1,2,3,4,5].map(y=>O(k+'D'+y)).join('')}</tr>
+ <tr><td>Balance amount (E = C − D)</td>${[1,2,3,4,5].map(y=>O(k+'E'+y)).join('')}</tr>
+ <tr class="tot"><td>EMI (E ÷ months) F</td>${[1,2,3,4,5].map(y=>O(k+'F'+y)).join('')}</tr></table></div>`;});
+$('vehBody').innerHTML=h;
+function calcVeh(){VEH.forEach(([k])=>{const A=v(k+'A'),d=A*v(k+'dp')/100,ln=A-d;
+ set(k+'dpv',d);set(k+'ln',ln);set(k+'sh',ln*v(k+'sp')/100);
+ for(let y=1;y<=5;y++){const B=ln*v(k+'m'+y)/100,C=A+B,E=C-d;if(y>1)set(k+'A'+y,A);set(k+'B'+y,B);set(k+'C'+y,C);set(k+'D'+y,d);set(k+'E'+y,E);set(k+'F'+y,E/(12*y));}});}
+$('vehBody').addEventListener('input',calcVeh);calcVeh();
+// ---- All loans (ALL_LOAN_CALCULATION) ----
+const ALL=[['g','GENERAL PURPOSE LOAN (141, 143)',50000,[['6 MONTH',6,6],['1 YEAR',12,8]]],['m','MURABAHA (102), TRADE FINANCE (101)',50000,[['1 YEAR',12,13],['2 YEAR',24,20],['3 YEAR',36,28.08],['4 YEAR',48,37.37]]],['a','ASSET CREATION (112)',400000,[['1 YEAR',12,10],['2 YEAR',24,18],['3 YEAR',36,24],['4 YEAR',48,28.4]]]];
+h='';
+ALL.forEach(([k,t,amt,cols])=>{const r=a=>cols.map((c,i)=>a(c,i)).join('');
+ h+=`<h4 style="margin:14px 0 4px">${t}</h4><div class="cbar"><span>Share %</span>${I(k+'sp',2.5)}<span>Share amount <b id="${k}sh"></b></span></div>
+ <div style="overflow-x:auto"><table class="cx"><tr><th>Particulars</th>${r(c=>`<th>${c[0]}</th>`)}</tr>
+ <tr><td>Months</td>${r((c,i)=>`<td>${I(k+'mo'+i,c[1])}</td>`)}</tr>
+ <tr><td>Loan amount</td><td>${I(k+'amt',amt)}</td>${cols.slice(1).map((c,i)=>O(k+'la'+(i+1))).join('')}</tr>
+ <tr><td>SOC %</td>${r((c,i)=>`<td>${I(k+'so'+i,c[2])}</td>`)}</tr>
+ <tr><td>SOC</td>${r((c,i)=>O(k+'sc'+i))}</tr>
+ <tr><td>Total amount</td>${r((c,i)=>O(k+'to'+i))}</tr>
+ <tr class="tot"><td>EMI</td>${r((c,i)=>O(k+'em'+i))}</tr></table></div>`;});
+$('allBody').innerHTML=h;
+function calcAll(){ALL.forEach(([k,t,a,cols])=>{const A=v(k+'amt');set(k+'sh',A*v(k+'sp')/100);
+ cols.forEach((c,i)=>{if(i)set(k+'la'+i,A);const so=A*v(k+'so'+i)/100,to=A+so;set(k+'sc'+i,so);set(k+'to'+i,to);set(k+'em'+i,to/(v(k+'mo'+i)||1));});});}
+$('allBody').addEventListener('input',calcAll);calcAll();
+// ---- Appraiser certificate ----
+const T=(id,val,w)=>`<input class="w" type="text" id="${id}" value="${val}" ${w?'style="width:'+w+'"':''}>`;
+const rows=[['EARRING AND MATTAL',4,20,15.65,12],['HAIR PIN',2,20,6.3,4]];
+let r='';for(let i=0;i<10;i++){const d=rows[i]||['','','','',''];r+=`<tr><td>${i+1}</td><td>${T('ap'+i,d[0])}</td><td>${I('an'+i,d[1])}</td><td>${I('ac'+i,d[2])}</td><td>${I('ag'+i,d[3])}</td><td>${I('at'+i,d[4])}</td>${O('aq'+i)}</tr>`;}
+$('aprBody').innerHTML=`<div class="cbar"><span>Appraiser</span>${T('aName','RAVI')}<span>License no</span>${T('aLic','')}<span>Phone</span>${T('aPh','7010397799')}<span>Place</span>${T('aPl','LALPETTAI')}<span>Date</span><input type="date" id="aDt" style="width:140px"></div>
+<div class="cbar"><span>Address</span>${T('aAd','34, KHAITHAKARA STREET, KATTUMANNAR KOIL, CUDDALORE - 608 301')}</div>
+<table class="cx"><tr><th colspan="4">BOARD RATE (per gram)</th></tr><tr><td>24 carat — enter</td>${'<td>'+I('rate',14882)+'</td>'}<td>8 gram</td>${O('r24_8')}</tr>
+<tr><td>22 carat (KDM)</td>${O('r22')}<td>8 gram</td>${O('r22_8')}</tr><tr><td>20 carat</td>${O('r20')}<td>8 gram</td>${O('r20_8')}</tr><tr><td>18 carat (NON KDM)</td>${O('r18')}<td>8 gram</td>${O('r18_8')}</tr></table>
+<div class="cbar"><span>Member name</span>${T('aMem','HUMAIRA BEGUM')}<span>Loan A/C no</span>${T('aAc','112/99282')}</div>
+<div style="overflow-x:auto"><table class="cx"><tr><th>S.No</th><th>Particulars</th><th>No. of pieces</th><th>Carat</th><th>Gross grams</th><th>Net grams</th><th>Market price</th></tr>${r}
+<tr class="tot"><td></td><td>TOTAL</td>${O('tn')}<td></td>${O('tg')}${O('tt')}${O('tq')}</tr></table></div>
+<table class="cx"><tr><td>Loan eligible % of total market price</td><td>${I('elp',75)}</td><td>LOAN AMOUNT ELIGIBLE TO SANCTION</td>${O('elig')}</tr>
+<tr><td colspan="2">LOAN AMOUNT SANCTIONED</td><td colspan="2">${I('sanc',150000)}</td></tr><tr><td colspan="3">Sanctioned within eligible limit?</td><td class="out" id="okc"></td></tr></table>`;
+$('aDt').value=new Date().toISOString().slice(0,10);
+function calcApr(){const R=v('rate');set('r24_8',R*8);const g=c=>R/24*c;
+ [22,20,18].forEach(c=>{set('r'+c,g(c),1);set('r'+c+'_8',g(c)*8,1);});
+ let n=0,gr=0,nt=0,q=0;for(let i=0;i<10;i++){const p=g(v('ac'+i))*v('at'+i);set('aq'+i,p,1);n+=v('an'+i);gr+=v('ag'+i);nt+=v('at'+i);q+=p;}
+ set('tn',n);set('tg',gr,1);set('tt',nt,1);set('tq',q,1);const el=q*v('elp')/100;set('elig',el,1);
+ const ok=v('sanc')<=el+0.5;$('okc').textContent=ok?'Yes — within limit':'NO — exceeds eligible by ₹'+f2(v('sanc')-el);$('okc').style.color=ok?'inherit':'#a13d2b';}
+$('aprBody').addEventListener('input',calcApr);calcApr();
+// ---- print snapshot ----
+document.addEventListener('click',e=>{const b=e.target.closest('[data-print]');if(!b)return;
+ const c=$(b.dataset.print).cloneNode(true);const src=$(b.dataset.print).querySelectorAll('input');
+ c.querySelectorAll('input').forEach((x,i)=>{const s=document.createElement('span');s.textContent=src[i].value;x.replaceWith(s);});
+ const w=window.open('','_blank');if(!w)return;
+ w.document.write('<html><head><title>'+b.dataset.title+'</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:16px}table{border-collapse:collapse;width:100%;margin:8px 0}td,th{border:1px solid #666;padding:4px 6px;text-align:right}td:first-child,th:first-child{text-align:left}th{background:#ddd}.cbar{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0}</style></head><body><h3>'+b.dataset.title+'</h3>'+c.innerHTML+'<p style="margin-top:20px;font-size:10px">Clouds Dev Solutions · cloudsdevsolutions@gmail.com</p></body></html>');
+ w.document.close();w.focus();w.print();});
+})();
+</script>
+
 </body>
 </html>

@@ -1,0 +1,17 @@
+{
+  "name": "Loan Data Management",
+  "short_name": "Loan Data",
+  "description": "Clean up messy loan statements, manage a loan-type portfolio, track LPC and payments — Clouds Dev Solutions.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f2e7",
+  "theme_color": "#1f3d2b",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
